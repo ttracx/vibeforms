@@ -37,8 +37,4 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-}
+// Route segment config - no bodyParser needed for formData in app router

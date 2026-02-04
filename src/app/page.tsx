@@ -153,7 +153,17 @@ export default function HomePage() {
             </div>
             <span className="font-bold text-gray-900">VibeForms</span>
           </div>
-          <p>&copy; {new Date().getFullYear()} VibeForms. All rights reserved.</p>
+          <p>
+            © 2026 VibeForms powered by{" "}
+            <a href="https://vibecaas.com/" className="text-violet-600 hover:underline" target="_blank" rel="noopener noreferrer">
+              VibeCaaS.com
+            </a>{" "}
+            a division of{" "}
+            <a href="https://neuralquantum.ai/" className="text-violet-600 hover:underline" target="_blank" rel="noopener noreferrer">
+              NeuralQuantum.ai LLC
+            </a>
+            . All rights reserved.
+          </p>
         </div>
       </footer>
     </div>
