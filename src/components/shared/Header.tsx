@@ -2,15 +2,20 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
 
 export default function Header() {
   const pathname = usePathname();
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === 'authenticated';
 
-  const navItems = [
-    { href: '/', label: 'Home' },
-    { href: '/dashboard', label: 'Dashboard' },
-    { href: '/builder', label: 'Create Form' },
-  ];
+  const navItems = isAuthenticated
+    ? [
+        { href: '/', label: 'Home' },
+        { href: '/dashboard', label: 'Dashboard' },
+        { href: '/builder', label: 'Create Form' },
+      ]
+    : [{ href: '/', label: 'Home' }];
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -41,6 +46,43 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
+
+            {isAuthenticated ? (
+              <div className="flex items-center gap-2 ml-2">
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                {(session?.user as any)?.plan === 'pro' ? (
+                  <span className="px-2 py-0.5 rounded text-xs bg-indigo-100 text-indigo-700 font-medium">
+                    Pro
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600 font-medium">
+                    Free
+                  </span>
+                )}
+                <span className="text-xs text-gray-500 hidden sm:inline">{session?.user?.email}</span>
+                <button
+                  onClick={() => signOut({ callbackUrl: '/' })}
+                  className="px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 transition-colors"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 ml-2">
+                <Link
+                  href="/login"
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/signup"
+                  className="px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+                >
+                  Get Started
+                </Link>
+              </div>
+            )}
           </nav>
         </div>
       </div>

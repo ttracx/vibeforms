@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import { FormField, FieldType, FormTemplate } from '@/lib/types';
@@ -21,8 +22,16 @@ const defaultFieldConfigs: Record<FieldType, Omit<FormField, 'id'>> = {
 };
 
 export default function BuilderPage() {
+  const { status } = useSession();
   const router = useRouter();
   const [formName, setFormName] = useState('');
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
+
   const [formDescription, setFormDescription] = useState('');
   const [template, setTemplate] = useState<FormTemplate>('blank');
   const [fields, setFields] = useState<FormField[]>([]);

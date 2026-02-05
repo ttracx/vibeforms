@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Form } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
@@ -11,9 +13,17 @@ interface FormWithCount extends Form {
 }
 
 export default function DashboardPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [forms, setForms] = useState<FormWithCount[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
 
   const fetchForms = useCallback(async () => {
     try {
@@ -28,8 +38,10 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    fetchForms();
-  }, [fetchForms]);
+    if (status === 'authenticated') {
+      fetchForms();
+    }
+  }, [fetchForms, status]);
 
   const togglePublish = async (form: FormWithCount) => {
     try {
@@ -61,13 +73,20 @@ export default function DashboardPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  if (loading) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const userPlan = (session?.user as any)?.plan || 'free';
+  const isPro = userPlan === 'pro';
+  const formLimit = isPro ? Infinity : 3;
+
+  if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
+
+  if (status === 'unauthenticated') return null;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -78,15 +97,28 @@ export default function DashboardPage() {
               <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
               <p className="text-gray-500 mt-1">Manage your forms and view responses</p>
             </div>
-            <Link
-              href="/builder"
-              className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Create Form
-            </Link>
+            <div className="flex items-center gap-3">
+              {!isPro && (
+                <span className="text-xs text-gray-500">
+                  {forms.length}/{formLimit} forms (Free)
+                </span>
+              )}
+              {forms.length < formLimit ? (
+                <Link
+                  href="/builder"
+                  className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Create Form
+                </Link>
+              ) : (
+                <span className="px-6 py-2.5 bg-gray-200 text-gray-500 rounded-lg text-sm font-medium cursor-not-allowed">
+                  Upgrade to Pro for Unlimited Forms
+                </span>
+              )}
+            </div>
           </div>
 
           {forms.length === 0 ? (
